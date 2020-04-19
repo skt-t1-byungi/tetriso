@@ -13,7 +13,10 @@
         "typescript": "^3.8.3"
     },
     "eslintConfig": {
-        "extends": "byungi/typescript"
+        "extends": "byungi/typescript",
+        "rules": {
+            "no-labels": "off"
+        }
     },
     "browserslist": [
         "last 1 Chrome version"

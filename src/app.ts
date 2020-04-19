@@ -16,7 +16,7 @@ addEventListener('keydown', e => {
     switch (e.keyCode) {
     case 37:
         return ctrl.press('left', { hold: true })
-    case 32:
+    case 88:
     case 38:
         return ctrl.press('up', { hold: true })
     case 39:
@@ -25,7 +25,7 @@ addEventListener('keydown', e => {
         return ctrl.press('down', { hold: true })
     case 90:
         return ctrl.press('a', { hold: true })
-    case 88:
+    case 32:
         return ctrl.press('b', { hold: true })
     case 27:
         if (game.isPlaying) $stopBtn.click()
@@ -37,7 +37,7 @@ addEventListener('keyup', e => {
     switch (e.keyCode) {
     case 37:
         return ctrl.release('left')
-    case 32:
+    case 88:
     case 38:
         return ctrl.release('up')
     case 39:
@@ -46,7 +46,7 @@ addEventListener('keyup', e => {
         return ctrl.release('down')
     case 90:
         return ctrl.release('a')
-    case 88:
+    case 32:
         return ctrl.release('b')
     }
 })

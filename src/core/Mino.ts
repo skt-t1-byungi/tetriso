@@ -2,6 +2,7 @@ import { Board } from './Board'
 import { BlockPosition, MinoDef } from './types'
 
 export class Mino {
+    #isCommitted = false
     #board: Board
     #color: string
     #shape: number[][]
@@ -15,6 +16,14 @@ export class Mino {
             x: Math.ceil((board.size.width - shape[0].length) / 2),
             y: -shape.filter(cols => cols.some(Boolean)).length
         }
+    }
+
+    get isCommitted () {
+        return this.#isCommitted
+    }
+
+    get isOutside () {
+        return this._poses().every(({ y }) => y < 0)
     }
 
     get data () {
@@ -35,6 +44,7 @@ export class Mino {
 
     drop () {
         const dist = this.#board.dropDistance(this._poses())
+
         return dist > 0 && this._move(0, dist)
     }
 
@@ -74,7 +84,9 @@ export class Mino {
         return sh[0].map((_, x) => sh.map((_, y, { length: l }) => isLeft ? sh[y][l - 1 - x] : sh[l - 1 - y][x]))
     }
 
-    commitToBoard () {
+    commit () {
+        if (this.#isCommitted) return
+        this.#isCommitted = true
         this.#board.add({ color: this.#color, positions: this._poses() })
     }
 }

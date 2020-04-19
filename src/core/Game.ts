@@ -77,46 +77,43 @@ export class Game {
         this.#score = 0
 
         let mino: Mino|null = null
-        const commit = () => {
-            if (!mino) return
-            mino.commitToBoard()
-            const len = this.#board.clearFilledLines()
-            this.#score += len * this.#lv * 100
-            mino = null
-        }
-
         const ctrl = this.#ctrl
         const offs = [
-            ctrl.on('up', () => {
-                if (!mino) return
-                mino.drop()
-                commit()
-                sw.stop()
-            }),
             ctrl.on('down', () => {
-                if (!mino) return
+                if (!this.isPlaying || !mino) return
                 if (!mino.down()) {
-                    commit()
+                    mino.commit()
                     sw.stop()
                 }
             }, { throttle: 64, repeat: true }),
-            ctrl.on('left', () => mino?.left(), { throttle: 80, repeat: true }),
-            ctrl.on('right', () => mino?.right(), { throttle: 80, repeat: true }),
-            ctrl.on('a', () => mino?.rotateLeft(), { throttle: 144, repeat: true }),
-            ctrl.on('b', () => mino?.rotateRight(), { throttle: 144, repeat: true })
+            ctrl.on('left', () => this.isPlaying && mino?.left(), { throttle: 64, repeat: true }),
+            ctrl.on('right', () => this.isPlaying && mino?.right(), { throttle: 64, repeat: true }),
+            ctrl.on('up', () => this.isPlaying && mino?.rotateRight(), { throttle: 144, repeat: true }),
+            ctrl.on('a', () => this.isPlaying && mino?.rotateLeft(), { throttle: 144, repeat: true }),
+            ctrl.on('b', () => {
+                if (!this.isPlaying || !mino) return
+                mino.drop()
+                mino.commit()
+                sw.stop()
+            })
         ]
 
+        loop:
         while (true) {
             mino = this._newMino()
-            await sw.start(500)
-            if (!mino) continue
-            if (!mino.down()) break // = > game over!
 
             while (true) {
                 await sw.start(500)
-                if (!mino) break
-                if (mino.down()) continue
-                commit()
+
+                if (mino.isCommitted && mino.isOutside) break loop
+                if (!mino.isCommitted) {
+                    if (!mino.down()) mino.commit()
+                    if (!mino.isCommitted) continue
+                    if (mino.isOutside) break loop
+                }
+
+                const len = this.#board.clearFilledLines()
+                this.#score += len * this.#lv * 100
                 break
             }
         }

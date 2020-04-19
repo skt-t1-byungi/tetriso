@@ -39,8 +39,9 @@ export class Board {
         const byX = poses.reduce((o, { x, y }) => ((o[x] = Math.max(o[x] || -Infinity, y)), o), {} as {[k: number]: number})
         const { height } = this.#size
         const dists = Object.entries(byX).map(([x, y]: any) => {
-            const idx = this.#map.slice(++y).findIndex(cols => cols[x])
-            return ~idx ? idx : height - y
+            const n = Math.max(y + 1, 0)
+            const idx = this.#map.slice(n).findIndex(cols => cols[x])
+            return ~idx ? idx : height - n
         })
         return Math.min(...dists)
     }
