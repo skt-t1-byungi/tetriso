@@ -1,4 +1,3 @@
-
 export const I = {
     name: 'I',
     color: 'skyblue',
