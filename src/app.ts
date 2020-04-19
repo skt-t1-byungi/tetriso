@@ -1,201 +1,128 @@
-type MinoDef = {color: string; shape: number[][]}
-const MINO = {
-    I: {
-        color: 'sky',
-        shape: [
-            [1],
-            [1],
-            [1],
-            [1]
-        ]
-    },
-    J: {
-        color: 'blue',
-        shape: [
-            [1, 0, 0],
-            [1, 1, 1]
-        ]
-    },
-    L: {
-        color: 'orange',
-        shape: [
-            [0, 0, 1],
-            [1, 1, 1]
-        ]
-    },
-    O:
-    {
-        color: 'purple',
-        shape: [
-            [1, 1],
-            [1, 1]
-        ]
-    },
-    T: {
-        color: 'yellow',
-        shape: [
-            [0, 1, 0],
-            [1, 1, 1]
-        ]
-    },
-    S: {
-        color: 'green',
-        shape: [
-            [0, 1, 1],
-            [1, 1, 0]
-        ]
-    },
-    Z: {
-        color: 'red',
-        shape: [
-            [1, 1, 0],
-            [0, 1, 1]
-        ]
+import { Game, STATUS } from './core/Game'
+
+const $ = document.querySelector.bind(document)
+
+const $startBtn = $('.js-start') as HTMLButtonElement
+const $stopBtn = $('.js-stop') as HTMLButtonElement
+const $status = $('.js-status') as HTMLDivElement
+const $board = $('.js-board') as HTMLDivElement
+const $q = $('.js-q') as HTMLDivElement
+
+const game = new Game()
+const ctrl = game.controller
+let timerId: number|null = null
+
+addEventListener('keydown', e => {
+    switch (e.keyCode) {
+    case 37:
+        return ctrl.press('left', { hold: true })
+    case 32:
+    case 38:
+        return ctrl.press('up', { hold: true })
+    case 39:
+        return ctrl.press('right', { hold: true })
+    case 40:
+        return ctrl.press('down', { hold: true })
+    case 90:
+        return ctrl.press('a', { hold: true })
+    case 88:
+        return ctrl.press('b', { hold: true })
+    case 27:
+        if (game.isPlaying) $stopBtn.click()
+        else if (game.isPaused) $startBtn.click()
     }
-}
+})
 
-type BlockPos = {x: number; y: number}
-const WAITING_HIGHT = 4
-type Block = {color: string}
-class Board {
-    #map: Array<Array<Block|null>>
-    #curr: BlockPos[] = null!
-    #rotates: 0|1|2|3 = 0
+addEventListener('keyup', e => {
+    switch (e.keyCode) {
+    case 37:
+        return ctrl.release('left')
+    case 32:
+    case 38:
+        return ctrl.release('up')
+    case 39:
+        return ctrl.release('right')
+    case 40:
+        return ctrl.release('down')
+    case 90:
+        return ctrl.release('a')
+    case 88:
+        return ctrl.release('b')
+    }
+})
 
-    constructor ({ width = 10, height = 20 } = {}) {
-        this.#map = Array.from({ length: height + WAITING_HIGHT }, () => Array(width).fill(null))
+$startBtn.addEventListener('click', () => {
+    $stopBtn.disabled = false
+    $startBtn.disabled = true
+
+    if (game.isPaused) {
+        game.start()
+        renderLoop()
+        return
     }
 
-    add ({ color, shape }: MinoDef) {
-        const { width } = this._size()
-        const padW = ~~((width - shape[0].length) / 2)
-        const padH = WAITING_HIGHT - shape.length
-        this.#curr = shape
-            .flatMap((cols, y) => cols.map((v, x) => (v && { x: x + padW, y: y + padH })))
-            .filter(Boolean) as any
-        this.#curr.forEach(({ x, y }) => (this.#map[y][x] = { color }))
-        this.#rotates = 0
-    }
-
-    get data () {
-        return this.#map.slice(WAITING_HIGHT)
-    }
-
-    private _size () {
-        const { length: height, 0: { length: width } } = this.#map
-        return { width, height }
-    }
-
-    private _isCollided (poses: BlockPos[]) {
-        const { width, height } = this._size()
-        return poses.some(({ x, y }) =>
-            (x < 0 || y < 0 || x >= width || y >= height) ||
-            (this.#curr.every(o => o.x !== x && o.y !== y) && this.#map[y][x]))
-    }
-
-    private _move (next: BlockPos[]) {
-        const blocks = this.#curr.map(({ x, y }) => this.#map[y][x])
-        this.#curr.forEach(({ x, y }) => (this.#map[y][x] = null))
-        ;(this.#curr = next).forEach(({ x, y }, i) => (this.#map[y][x] = blocks[i]))
-    }
-
-    left () {
-        const next = this.#curr.map(({ x, y }) => ({ x: --x, y }))
-        if (!this._isCollided(next)) this._move(next)
-    }
-
-    right () {
-        const next = this.#curr.map(({ x, y }) => ({ x: ++x, y }))
-        if (!this._isCollided(next)) this._move(next)
-    }
-
-    down () {
-        const next = this.#curr.map(({ x, y }) => ({ x, y: ++y }))
-        if (!this._isCollided(next)) this._move(next)
-    }
-
-    drop () {
-        const distance = this._dropDistance()
-        if (!distance) return
-
-        const next = this.#curr.map(({ x, y }) => ({ x, y: y + distance }))
-        if (!this._isCollided(next)) this._move(next)
-    }
-
-    private _dropDistance () {
-        const byX = this.#curr.reduce((o, { x, y }) => ((o[x] = Math.max(o[x] || -1, y)), o), {} as {[k: number]: number})
-        const { height } = this._size()
-        const distances = Object.entries(byX).map(([x, y]: any) => {
-            const idx = this.#map.slice(++y).findIndex(cols => cols[x])
-            return ~idx ? idx : height - y
-        })
-        return Math.min(...distances)
-    }
-
-    dropPositions () {
-        const distance = this._dropDistance() - WAITING_HIGHT
-        return this.#curr.map(({ x, y }) => ({ x, y: y + distance }))
-    }
-
-    rotateRight () {
-        const pv = this._pivot(this.#rotates)
-        const next = this.#curr.map(({ x, y }) => ({ x: -y + pv.y + pv.x, y: x - pv.x + pv.y }))
-        if (!this._isCollided(next)) {
-            this.#rotates = ((this.#rotates + 1) % 4)as any
-            this._move(next)
+    let cnt = 3
+    const renderTxt = () => ($status.innerHTML = `Ready... ${cnt}`)
+    renderTxt()
+    timerId = setInterval(() => {
+        if (!--cnt) {
+            clearInterval(timerId!)
+            timerId = setTimeout(() => {
+                $board.style.opacity = '1'
+                game.start()
+                renderLoop()
+            }, 400)
         }
+        renderTxt()
+    }, 400)
+})
+
+$stopBtn.addEventListener('click', () => {
+    $stopBtn.disabled = true
+    $startBtn.disabled = false
+
+    if (game.isPlaying) {
+        $status.innerHTML = 'paused...'
+        game.pause()
+        return
     }
 
-    private _pivot (rotates: number) {
-        const max = { x: -1, y: -1 }
-        const min = { x: Infinity, y: Infinity }
-        this.#curr.forEach(({ x, y }) => {
-            max.x = Math.max(max.x, x)
-            max.y = Math.max(max.y, y)
-            min.x = Math.min(min.x, x)
-            min.y = Math.min(min.y, y)
-        })
-        const diff = { x: max.x - min.x, y: max.y - min.y }
-        const lg = Math.max(diff.x, diff.y)
-        const sm = Math.min(diff.x, diff.y)
-        const fix = (sm / lg >= 1 / 2) ? { x: lg / 2, y: lg / 2 } : { x: diff.x / 2, y: diff.y / 2 }
-        if (rotates === 1) fix.x = ~~(fix.x / 2)
-        if (rotates === 2) fix.y = ~~(fix.y / 2)
-        return { x: min.x + fix.x, y: min.y + fix.y }
-    }
+    $status.innerHTML = 'Stopped...'
+    if (timerId) clearInterval(timerId)
+})
 
-    rotateLeft () {
-    }
+function renderLoop () {
+    requestAnimationFrame(() => {
+        const { data } = game
+        if (data.status !== STATUS.PLAYING) {
+            if (data.status === STATUS.END) {
+                $stopBtn.disabled = true
+                $startBtn.disabled = false
+                $status.innerHTML = `<b>GameOver!!</b> <br/> score:${data.score}`
+                $board.style.opacity = '0.3'
+            }
+            return
+        }
+        $board.innerHTML = data.board
+            .flatMap(cols => cols.map(b => `<div style="background: ${b ? b!.color : 'black'}"></div>`))
+            .join('')
+        const { color, positions, dropPositions } = data.mino
+        dropPositions
+            .filter(pos => pos.y >= 0)
+            .forEach(pos => {
+                const el = $board.children[pos.y * 10 + pos.x] as HTMLDivElement
+                el.style.background = '#333'
+            })
+        positions
+            .filter(pos => pos.y >= 0)
+            .forEach(pos => {
+                const el = $board.children[pos.y * 10 + pos.x] as HTMLDivElement
+                el.style.background = color
+            })
+        $status.innerHTML = `score: ${data.score} <br/> level: ${data.level}`
+        $q.innerHTML = data.queue
+            .map(b => `<span style="color:${b.color}">${b.name}</span>`)
+            .join('')
+        requestAnimationFrame(renderLoop)
+    })
 }
-
-const b = new Board()
-b.add(MINO.Z)
-b.down()
-b.down()
-b.down()
-b.down()
-b.down()
-// b.left()
-// b.left()
-console.table(b.data)
-b.rotateRight()
-console.table(b.data)
-b.rotateRight()
-console.table(b.data)
-b.rotateRight()
-console.table(b.data)
-b.rotateRight()
-console.table(b.data)
-// b.down()
-// b.down()
-// b.rotateRight()
-// b.rotateRight()
-// b.rotateRight()
-// b.down()
-// b.down()
-// b.down()
-// b.down()
-// b.drop()
-// console.log(b.dropPos())
-// console.table(b.map)
-// console.table(MINO.J.shape)

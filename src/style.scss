@@ -1,0 +1,38 @@
+.app{
+    width: 500px;
+    margin: 0 auto;
+}
+
+.main{
+    display: flex;
+}
+
+.board{
+    $size: 25px;
+    width: $size * 10;
+    height: $size * 20;
+    border: black 2px solid;
+    background: black;
+    display: grid;
+    grid-template: repeat(20, 1fr) / repeat(10, 1fr);
+}
+
+.side{
+    margin-left: 10px;
+    & > * {
+        margin-bottom: 10px;
+    }
+}
+
+.q{
+    height: 200px;
+    background: black;
+    color: white;
+    font-weight: 900;
+    font-size: 30px;
+    font-family: arial, serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+}
