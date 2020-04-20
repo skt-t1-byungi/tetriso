@@ -663,10 +663,10 @@ class Game {
       throttle: 64,
       repeat: true
     }), ctrl.on('left', () => this.isPlaying && mino?.left(), {
-      throttle: 64,
+      throttle: 80,
       repeat: true
     }), ctrl.on('right', () => this.isPlaying && mino?.right(), {
-      throttle: 64,
+      throttle: 80,
       repeat: true
     }), ctrl.on('up', () => this.isPlaying && mino?.rotateRight(), {
       throttle: 144,
