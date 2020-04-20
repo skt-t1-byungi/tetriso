@@ -86,8 +86,8 @@ export class Game {
                     sw.stop()
                 }
             }, { throttle: 64, repeat: true }),
-            ctrl.on('left', () => this.isPlaying && mino?.left(), { throttle: 64, repeat: true }),
-            ctrl.on('right', () => this.isPlaying && mino?.right(), { throttle: 64, repeat: true }),
+            ctrl.on('left', () => this.isPlaying && mino?.left(), { throttle: 80, repeat: true }),
+            ctrl.on('right', () => this.isPlaying && mino?.right(), { throttle: 80, repeat: true }),
             ctrl.on('up', () => this.isPlaying && mino?.rotateRight(), { throttle: 144, repeat: true }),
             ctrl.on('a', () => this.isPlaying && mino?.rotateLeft(), { throttle: 144, repeat: true }),
             ctrl.on('b', () => {
