@@ -1,13 +1,16 @@
 {
     "private": true,
     "scripts": {
-        "dev": "parcel src/index.html --no-source-maps"
+        "dev": "parcel src/index.html --no-source-maps",
+        "build": "rm -rf dist && parcel build src/index.html -d public --no-source-maps --no-minify",
+        "deploy": "rm -rf public && npm run build && gh-pages -d public"
     },
     "devDependencies": {
         "@babel/core": "^7.9.0",
         "@babel/plugin-syntax-class-properties": "^7.8.3",
         "eslint": "^6.8.0",
         "eslint-config-byungi": "^0.10.4",
+        "gh-pages": "^2.2.0",
         "parcel": "^1.12.4",
         "sass": "^1.26.3",
         "typescript": "^3.8.3"
