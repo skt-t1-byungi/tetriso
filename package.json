@@ -2,7 +2,7 @@
     "private": true,
     "scripts": {
         "dev": "parcel src/index.html --no-source-maps",
-        "build": "rm -rf dist && parcel build src/index.html -d public --no-source-maps --no-minify",
+        "build": "rm -rf dist && parcel build src/index.html -d public --public-url ./ --no-source-maps --no-minify",
         "deploy": "rm -rf public && npm run build && gh-pages -d public"
     },
     "devDependencies": {
